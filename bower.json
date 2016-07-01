@@ -1,0 +1,18 @@
+{
+  "name": "angular-wysiwyg2",
+  "homepage": "https://github.com/ngDirectives/angular-wysiwyg2",
+  "authors": [
+    "nil4you <nil4u.you@gmail.com>"
+  ],
+  "description": "wysiwyg with added feature of print and print preview",
+  "main": "angular-wysiwyg.js",
+  "keywords": [
+    "angular",
+    "wysiwyg",
+    "wysiwyg",
+    "angular",
+    "wysiwyg2",
+    "wysiwyg2"
+  ],
+  "license": "MIT"
+}
