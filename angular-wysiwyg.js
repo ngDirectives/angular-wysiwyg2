@@ -23,7 +23,7 @@ angular.module('wysiwyg.module', []) // 'colorpicker.module'
 					  '<style>' +
 					  '	.wysiwyg-btn-group-margin{  margin-right:5px; }' +
 					  '	.wysiwyg-select{ height:30px;margin-bottom:1px;}' +
-					  '	.wysiwyg-colorpicker{ font-family: arial, sans-serif !important;font-size:16px !important; padding:2px 10px !important;}' +
+					  '	.wysiwyg-colorpicker{ font-family: arial, sans-serif !important;font-size:17px !important; padding:2px 10px !important;}' +
 					  '</style>' +
 					  '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin">' +
 						  '<button title="Bold" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="format(\'bold\')" ng-class="{ active: isBold}"><i class="fa fa-bold"></i></button>' +
@@ -76,7 +76,7 @@ angular.module('wysiwyg.module', []) // 'colorpicker.module'
                        '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin">' +
 						  '<button title="PDF" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="printPDF(false)"><i class="fa fa-file-text-o"></i> </button>' +
 					  '</div>' +
-					  '<div id="{{textareaId}}" style="resize:vertical;height:{{textareaHeight || \'80px\'}}; font-family:{{\'Times New Roman\'}}; font-size:{{\'12px\'}}; overflow:auto" contentEditable="true" class="{{textareaClass}} wysiwyg-textarea" rows="{{textareaRows}}" name="{{textareaName}}" required="{{textareaRequired}}" placeholder="{{textareaPlaceholder}}" ng-model="value"></div>' +
+					  '<div id="{{textareaId}}" style="resize:vertical;height:{{textareaHeight || \'80px\'}}; font-family:{{\'Times New Roman\'}}; font-size:{{\'17px\'}}; overflow:auto" contentEditable="true" class="{{textareaClass}} wysiwyg-textarea" rows="{{textareaRows}}" name="{{textareaName}}" required="{{textareaRequired}}" placeholder="{{textareaPlaceholder}}" ng-model="value"></div>' +
 				  '</div>',
 		  restrict: 'E',
 		  scope: {
@@ -120,16 +120,16 @@ angular.module('wysiwyg.module', []) // 'colorpicker.module'
 					  size: '10px'
 				  },
 				  {
-				      value: '2',
-				      size: '12px'
-				  },
-				  {
-					  value: '3',
+					  value: '2',
 					  size: '13px'
 				  },
 				  {
-					  value: '4',
+					  value: '3',
 					  size: '16px'
+				  },
+				  {
+					  value: '4',
+					  size: '17px'
 				  },
 				  {
 					  value: '5',
@@ -149,7 +149,8 @@ angular.module('wysiwyg.module', []) // 'colorpicker.module'
 				  }
 			  ];
 
-			  scope.fontSize = scope.fontSizes[1];
+			  scope.fontSize = scope.fontSizes[3];
+			 // scope.cmdValue('fontsize',4);
 
 			  if (attrs.enableBootstrapTitle === "false" && attrs.enableBootstrapTitle !== undefined)
 				  element.find('button[title]').tooltip({ container: 'body' });
@@ -197,7 +198,6 @@ angular.module('wysiwyg.module', []) // 'colorpicker.module'
 					  return '#fff';
 				  }
 			  }
-
 			  textarea.on('click keyup focus mouseup', function () {
 			      $timeout(function () {
 					  scope.isBold = scope.cmdState('bold');
@@ -224,6 +224,7 @@ angular.module('wysiwyg.module', []) // 'colorpicker.module'
   
 					  scope.fontSizes.forEach(function (v, k) {
 						  if (scope.cmdValue('fontsize') === v.value) {
+//						  	debugger;
 							  scope.fontSize = v;
 							  return false;
 						  }
