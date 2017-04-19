@@ -16,10 +16,10 @@ Requires:
 
 */
 
-angular.module('wysiwyg.module', []) // 'colorpicker.module'
-  .directive('wysiwyg', function ($timeout) {
-	  return {
-		  template: '<div class="editorTiny">' +
+angular.module('wysiwyg.module',[]) 
+  .directive('wysiwyg', function ($timeout,$rootScope) {
+      return {
+          template: '<div class="editorTiny">' +
 					  '<style>' +
 					  '	.wysiwyg-btn-group-margin{  margin-right:5px; }' +
 					  '	.wysiwyg-select{ height:30px;margin-bottom:1px;}' +
@@ -75,26 +75,28 @@ angular.module('wysiwyg.module', []) // 'colorpicker.module'
 					  '</div>' +
                        '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin">' +
 						  '<button title="PDF" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="printPDF(false)"><i class="fa fa-file-text-o"></i> </button>' +
+						  '<button title="Voice" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="texttospeach($event)"  ng-class=\'{ "mic-active": $root.recognizing }\'><i class="fa" ng-class=\'$root.recognizing ? "fa-microphone-slash" : "fa-microphone"\'></i> </button>' +
 					  '</div>' +
 					  '<div id="{{textareaId}}" style="resize:vertical;height:{{textareaHeight || \'80px\'}}; font-family:{{\'Times New Roman\'}}; font-size:{{\'17px\'}}; overflow:auto" contentEditable="true" class="{{textareaClass}} wysiwyg-textarea" rows="{{textareaRows}}" name="{{textareaName}}" required="{{textareaRequired}}" placeholder="{{textareaPlaceholder}}" ng-model="value"></div>' +
+					  ' <span class="final" id="final_span"></span> <span class="interim" id="interim_span"></span>' +
 				  '</div>',
-		  restrict: 'E',
-		  scope: {
-			  value: '=ngModel',
-			  textareaHeight: '@textareaHeight',
-			  textareaName: '@textareaName',
-			  textareaPlaceholder: '@textareaPlaceholder',
-			  textareaClass: '@textareaClass',
-			  textareaRequired: '@textareaRequired',
-			  textareaId: '@textareaId',
-		  },
-		  replace: true,
-		  require: 'ngModel',
-		  link: function (scope, element, attrs, ngModelController) {
+          restrict: 'E',
+          scope: {
+              value: '=ngModel',
+              textareaHeight: '@textareaHeight',
+              textareaName: '@textareaName',
+              textareaPlaceholder: '@textareaPlaceholder',
+              textareaClass: '@textareaClass',
+              textareaRequired: '@textareaRequired',
+              textareaId: '@textareaId',
+          },
+          replace: true,
+          require: 'ngModel',
+          link: function (scope, element, attrs, ngModelController) {
 
-			  var textarea = element.find('div.wysiwyg-textarea');
+              var textarea = element.find('div.wysiwyg-textarea');
 
-			  scope.fonts = [
+              scope.fonts = [
 				  'Georgia',
 				  'Palatino Linotype',
 				  'Times New Roman',
@@ -110,255 +112,352 @@ angular.module('wysiwyg.module', []) // 'colorpicker.module'
 				  'Courier New',
 				  'Lucida Console',
 				  'Helvetica Neue'
-			  ].sort();
+              ].sort();
+              
+              var final_transcript = '', ignore_onend, start_timestamp, recognition = new webkitSpeechRecognition(), tempmodel,els;
+			  recognition.continuous = true;
+			  recognition.interimResults = true;
+			  $rootScope.recognizing = false
+			  var two_line = /\n\n/g;
+				var one_line = /\n/g;
+				function linebreak(s) {
+				  return s.replace(two_line, '<p></p>').replace(one_line, '<br>');
+				}
+				var first_char = /\S/;
+				function safeApply(fn) {
+		          var phase;
+		          phase = scope.$root.$$phase;
+		          if (phase === "$apply" || phase === "$digest") {
+		            if (fn && (typeof fn === "function")) {
+		              return fn();
+		            }
+		          } else {
+		            return scope.$apply(fn);
+		          }
+		        };
+			  function capitalize(s) {
+				  return s.replace(first_char, function(m) { return m.toUpperCase(); });
+				}
+			  recognition.onstart = function() {
+			  	$("#final_span").html("");
+			  	final_transcript=interim_transcript="";
+			  	if (!scope.value) {
+			  		tempmodel="";
+			  	}else{
+			  		tempmodel=scope.value;
+			  	}
+			    $rootScope.recognizing = true;
 
-			  scope.font = scope.fonts[12];
+			  };
+			  recognition.onerror = function(event) {
 
-			  scope.fontSizes = [
+			    if (event.error == 'no-speech') {
+			      ignore_onend = true;
+			      $("#final_span").html("<h2>No Speech</h2>");
+			    }
+			    if (event.error == 'audio-capture') {
+			      ignore_onend = true;
+			      $("#final_span").html("<h2>No Audio</h2>");
+			    }
+			    if (event.error == 'not-allowed') {
+			      if (event.timeStamp - start_timestamp < 100) {
+			        $("#final_span").html("<h2>Allow permission of audio capture to use this functionality.</h2>");
+			      } else {
+			        $("#final_span").html("<h2>Allow permission of audio capture to use this functionality.</h2>");
+			      }
+			      ignore_onend = true;
+			    }
+			  };
+			  recognition.onend = function() {
+			    $rootScope.recognizing = false;
+			    if (ignore_onend) {
+			      return;
+			    }
+			    if (!final_transcript) {
+			      showInfo('info_start');
+			      return;
+			    }
+			   
+			  };
+			  recognition.onresult = function(event) {
+			    var interim_transcript = '';
+			    var isfinal;
+			    for (var i = event.resultIndex; i < event.results.length; ++i) {
+			      if (event.results[i].isFinal) {
+			      	isfinal=true;
+			        final_transcript += event.results[i][0].transcript;
+			      } else {
+			      	isfinal=false;
+			        interim_transcript += event.results[i][0].transcript;
+			      }
+			    }
+  				els.scrollTop(els[0].scrollHeight);
+			    safeApply(function() {
+		            return scope.value = tempmodel + linebreak(final_transcript) + linebreak(interim_transcript);
+		          });
+			    
+			  //  console.log(linebreak(final_transcript))
+			  //  console.log(linebreak(interim_transcript))
+			   // $("#final_span").html(linebreak(final_transcript));
+			 //  $("#interim_span").html(linebreak(interim_transcript));
+			  };
+			
+              scope.texttospeach = function (el) {
+              	els = $(el.currentTarget).parent().next();
+              	if ($rootScope.recognizing) {
+              		$rootScope.recognizing=!$rootScope.recognizing;
+				    recognition.stop();
+				    return;
+				}	
+				recognition.start();
+              }
+             
+              scope.font = scope.fonts[12];
+
+              scope.fontSizes = [
 				  {
-					  value: '1',
-					  size: '10px'
+				      value: '1',
+				      size: '10px'
 				  },
 				  {
-					  value: '2',
-					  size: '13px'
+				      value: '2',
+				      size: '13px'
 				  },
 				  {
-					  value: '3',
-					  size: '16px'
+				      value: '3',
+				      size: '16px'
 				  },
 				  {
-					  value: '4',
-					  size: '17px'
+				      value: '4',
+				      size: '17px'
 				  },
 				  {
-					  value: '5',
-					  size: '18px'
+				      value: '5',
+				      size: '18px'
 				  },
 				  {
-					  value: '6',
-					  size: '24px'
+				      value: '6',
+				      size: '24px'
 				  },
 				  {
-					  value: '7',
-					  size: '32px'
+				      value: '7',
+				      size: '32px'
 				  },
 				  {
-					  value: '8',
-					  size: '48px'
+				      value: '8',
+				      size: '48px'
 				  }
-			  ];
+              ];
+              scope.fontSize = scope.fontSizes[3];
+              // scope.cmdValue('fontsize',4);
 
-			  scope.fontSize = scope.fontSizes[3];
-			 // scope.cmdValue('fontsize',4);
+              if (attrs.enableBootstrapTitle === "false" && attrs.enableBootstrapTitle !== undefined)
+                  element.find('button[title]').tooltip({ container: 'body' });
+              textarea.on('keyup mouseup', function () {
+                  scope.$apply(function readViewText() {
+                      var html = textarea.html();
 
-			  if (attrs.enableBootstrapTitle === "false" && attrs.enableBootstrapTitle !== undefined)
-				  element.find('button[title]').tooltip({ container: 'body' });
-			  textarea.on('keyup mouseup', function () {
-				  scope.$apply(function readViewText() {
-					  var html = textarea.html();
+                      if (html == '<br>') {
+                          html = '';
+                      }
 
-					  if (html == '<br>') {
-						  html = '';
-					  }
-
-					  ngModelController.$setViewValue(html);
-				  });
-			  });
-			  scope.isLink = false;
+                      ngModelController.$setViewValue(html);
+                  });
+              });
+              scope.isLink = false;
 
 
-			  //Used to detect things like A tags and others that dont work with cmdValue().
-			  function itemIs(tag) {
-				  var selection = window.getSelection().getRangeAt(0);
-				  if (selection) {
-					  if (selection.startContainer.parentNode.tagName === tag.toUpperCase() || selection.endContainer.parentNode.tagName === tag.toUpperCase()) {
-						  return true;
-					  } else { return false; }
-				  } else { return false; }
-			  }
+              //Used to detect things like A tags and others that dont work with cmdValue().
+              function itemIs(tag) {
+                  var selection = window.getSelection().getRangeAt(0);
+                  if (selection) {
+                      if (selection.startContainer.parentNode.tagName === tag.toUpperCase() || selection.endContainer.parentNode.tagName === tag.toUpperCase()) {
+                          return true;
+                      } else { return false; }
+                  } else { return false; }
+              }
 
-			  //Used to detect things like A tags and others that dont work with cmdValue().
-			  function getHiliteColor() {
-				  var selection = window.getSelection().getRangeAt(0);
-				  if (selection) {
-					  var style = $(selection.startContainer.parentNode).attr('style');
+              //Used to detect things like A tags and others that dont work with cmdValue().
+              function getHiliteColor() {
+                  var selection = window.getSelection().getRangeAt(0);
+                  if (selection) {
+                      var style = $(selection.startContainer.parentNode).attr('style');
 
-					  if (!angular.isDefined(style))
-						  return false;
+                      if (!angular.isDefined(style))
+                          return false;
 
-					  var a = style.split(';');
-					  for (var i = 0; i < a.length; i++) {
-						  var s = a[i].split(':');
-						  if (s[0] === 'background-color')
-							  return s[1];
-					  }
-					  return '#fff';
-				  } else {
-					  return '#fff';
-				  }
-			  }
-			  textarea.on('click keyup focus mouseup', function () {
-			      $timeout(function () {
-					  scope.isBold = scope.cmdState('bold');
-					  scope.isUnderlined = scope.cmdState('underline');
-					  scope.isStrikethrough = scope.cmdState('strikethrough');
-					  scope.isItalic = scope.cmdState('italic');
-					  scope.isSuperscript = itemIs('SUP');//scope.cmdState('superscript');
-					  scope.isSubscript = itemIs('SUB');//scope.cmdState('subscript');	
-					  scope.isRightJustified = scope.cmdState('justifyright');
-					  scope.isLeftJustified = scope.cmdState('justifyleft');
-					  scope.isCenterJustified = scope.cmdState('justifycenter');
-					  scope.isPre = scope.cmdValue('formatblock') == "pre";
-					  scope.isBlockquote = scope.cmdValue('formatblock') == "blockquote";
+                      var a = style.split(';');
+                      for (var i = 0; i < a.length; i++) {
+                          var s = a[i].split(':');
+                          if (s[0] === 'background-color')
+                              return s[1];
+                      }
+                      return '#fff';
+                  } else {
+                      return '#fff';
+                  }
+              }
+              textarea.on('click keyup focus mouseup', function () {
+                  $timeout(function () {
+                      scope.isBold = scope.cmdState('bold');
+                      scope.isUnderlined = scope.cmdState('underline');
+                      scope.isStrikethrough = scope.cmdState('strikethrough');
+                      scope.isItalic = scope.cmdState('italic');
+                      scope.isSuperscript = itemIs('SUP');//scope.cmdState('superscript');
+                      scope.isSubscript = itemIs('SUB');//scope.cmdState('subscript');	
+                      scope.isRightJustified = scope.cmdState('justifyright');
+                      scope.isLeftJustified = scope.cmdState('justifyleft');
+                      scope.isCenterJustified = scope.cmdState('justifycenter');
+                      scope.isPre = scope.cmdValue('formatblock') == "pre";
+                      scope.isBlockquote = scope.cmdValue('formatblock') == "blockquote";
 
-					  scope.isOrderedList = scope.cmdState('insertorderedlist');
-					  scope.isUnorderedList = scope.cmdState('insertunorderedlist');
+                      scope.isOrderedList = scope.cmdState('insertorderedlist');
+                      scope.isUnorderedList = scope.cmdState('insertunorderedlist');
 
-					  scope.fonts.forEach(function (v, k) { //works but kinda crappy.
-						  if (scope.cmdValue('fontname').indexOf(v) > -1) {
-							  scope.font = v;
-							  return false;
-						  }
-					  });
-  
-					  scope.fontSizes.forEach(function (v, k) {
-						  if (scope.cmdValue('fontsize') === v.value) {
-//						  	debugger;
-							  scope.fontSize = v;
-							  return false;
-						  }
-					  });
-					  scope.hiliteColor = getHiliteColor();
-					  element.find('button.wysiwyg-hiliteColor').css("background-color", scope.hiliteColor);
+                      scope.fonts.forEach(function (v, k) { //works but kinda crappy.
+                          if (scope.cmdValue('fontname').indexOf(v) > -1) {
+                              scope.font = v;
+                              return false;
+                          }
+                      });
 
-					  scope.fontColor = scope.cmdValue('forecolor');
-					  element.find('button.wysiwyg-fontcolor').css("color", scope.fontColor);
+                      scope.fontSizes.forEach(function (v, k) {
+                          if (scope.cmdValue('fontsize') === v.value) {
+                              //						  	debugger;
+                              scope.fontSize = v;
+                              return false;
+                          }
+                      });
+                      scope.hiliteColor = getHiliteColor();
+                      element.find('button.wysiwyg-hiliteColor').css("background-color", scope.hiliteColor);
 
-					  scope.isLink = itemIs('A');
-				  }, 10);
-			  });
+                      scope.fontColor = scope.cmdValue('forecolor');
+                      element.find('button.wysiwyg-fontcolor').css("color", scope.fontColor);
 
-			  // model -> view
-			  ngModelController.$render = function () {
-				  textarea.html(ngModelController.$viewValue);
-			  };
+                      scope.isLink = itemIs('A');
+                  }, 10);
+              });
 
-			  scope.format = function (cmd, arg) {
-				  document.execCommand(cmd, false, arg);
-			  };
-			  scope.cmdState = function (cmd, id) {
-				  return document.queryCommandState(cmd);
-			  };
-			  scope.cmdValue = function (cmd) {
-				  return document.queryCommandValue(cmd);
-			  };
-			  scope.createLink = function () {
-				  var input = prompt('Enter the link URL');
-				  if (input && input !== undefined)
-					  scope.format('createlink', input);
-			  };
-			  scope.insertImage = function () {
-				  var input = prompt('Enter the image URL');
-				  if (input && input !== undefined)
-					  scope.format('insertimage', input);
-			  };
-			  scope.setFont = function () {
-				  scope.format('fontname', scope.font);
-			  };
-			  scope.setFontSize = function () {
-				  scope.format('fontsize', scope.fontSize.value);
-			  };
-			  scope.setFontColor = function () {
-				  scope.format('forecolor', scope.fontColor);
-			  };
-			  scope.setHiliteColor = function () {
-				  scope.format('hiliteColor', scope.hiliteColor);
-			  };
-			  scope.format('enableobjectresizing', true);
-			  scope.format('styleWithCSS', true);
+              // model -> view
+              ngModelController.$render = function () {
+                  textarea.html(ngModelController.$viewValue);
+              };
 
-			  function popupwindow(url, title, w, h) {
-				  var left = (screen.width / 2) - (w / 2);
-				  var top = (screen.height / 2) - (h / 2);
-				  return window.open(url, title, 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
-			  }
+              scope.format = function (cmd, arg) {
+                  document.execCommand(cmd, false, arg);
+              };
+              scope.cmdState = function (cmd, id) {
+                  return document.queryCommandState(cmd);
+              };
+              scope.cmdValue = function (cmd) {
+                  return document.queryCommandValue(cmd);
+              };
+              scope.createLink = function () {
+                  var input = prompt('Enter the link URL');
+                  if (input && input !== undefined)
+                      scope.format('createlink', input);
+              };
+              scope.insertImage = function () {
+                  var input = prompt('Enter the image URL');
+                  if (input && input !== undefined)
+                      scope.format('insertimage', input);
+              };
+              scope.setFont = function () {
+                  scope.format('fontname', scope.font);
+              };
+              scope.setFontSize = function () {
+                  scope.format('fontsize', scope.fontSize.value);
+              };
+              scope.setFontColor = function () {
+                  scope.format('forecolor', scope.fontColor);
+              };
+              scope.setHiliteColor = function () {
+                  scope.format('hiliteColor', scope.hiliteColor);
+              };
+              scope.format('enableobjectresizing', true);
+              scope.format('styleWithCSS', true);
 
-			  scope.saveandprint = function () {
-				  // Add Save here...
-				  scope.print();
-			  }
-			  scope.printPreview = function () {
-				  var toPrint = document.getElementById('question');
-				  var popupWin = popupwindow("_blank", "Print Preview", "710", "850");
-				  popupWin.document.open();
-				  popupWin.document.write('<html><title>Print Preview</title><link href="Content/css/PrintForTemplates.css" rel="stylesheet" media="screen"/></head><body">');
-				  popupWin.document.write(toPrint.innerHTML);
-				  popupWin.document.write('</html>');
-				  popupWin.document.close();
-			  };
+              function popupwindow(url, title, w, h) {
+                  var left = (screen.width / 2) - (w / 2);
+                  var top = (screen.height / 2) - (h / 2);
+                  return window.open(url, title, 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
+              }
 
-			  scope.print = function () {
-				  var toPrint = document.getElementById('question');
-				  var popupWin = popupwindow("_blank", "Print", "1024", "768");
-				  popupWin.document.open();
-				  popupWin.document.write('<html><title>Print</title><link href="Content/css/PrintForTemplates.css" rel="stylesheet" /><link href="print.css" rel="stylesheet" /></head><body onload="window.print()">');
-				  popupWin.document.write(toPrint.innerHTML);
-				  popupWin.document.write('</html>');
-				  popupWin.document.close();
-			  };
+              scope.saveandprint = function () {
+                  // Add Save here...
+                  scope.print();
+              }
+              scope.printPreview = function () {
+                  var toPrint = document.getElementById('question');
+                  var popupWin = popupwindow("_blank", "Print Preview", "710", "850");
+                  popupWin.document.open();
+                  popupWin.document.write('<html><title>Print Preview</title><link href="Content/css/PrintForTemplates.css" rel="stylesheet" media="screen"/></head><body">');
+                  popupWin.document.write(toPrint.innerHTML);
+                  popupWin.document.write('</html>');
+                  popupWin.document.close();
+              };
 
-			  scope.printPDF = function (IsPrint) {
-			      if ($('#logo-set').length > 0) {
-			          $(this).css('marginRight', '50%');
-			      }
-			      if ($('#question table').length > 0) {
-			          $('#question table>thead').append('<tr>' + $('#question table>tbody>tr').first().html() + '</tr>');
-			      }
-			      if ($('#l-center').length > 0) {
-			          $('#l-center').css('float', 'right');
-			      }
-			      var pdf = new jsPDF('p', 'pt', 'letter');
-			      var source = $('#question')[0];
-			      var i = 0;
-			      var ar = [];
-			      $('#question img').each(function (e) {
-			          if (i == 0) {
-			              ar.push($(this).parent().next().css('marginTop'));
-			              $(this).parent().next().css('marginTop', $(this).height() + 75);
-			          } else {
-			              ar.push($(this).parent().next().css('marginTop'));
-			              $(this).parent().next().css('marginTop', $(this).height() + 45);
-			          }
-			          i++;
-			      })
-			      var pdf = new jsPDF('p', 'pt', 'letter');
+              scope.print = function () {
+                  var toPrint = document.getElementById('question');
+                  var popupWin = popupwindow("_blank", "Print", "1024", "768");
+                  popupWin.document.open();
+                  popupWin.document.write('<html><title>Print</title><link href="Content/css/PrintForTemplates.css" rel="stylesheet" /><link href="print.css" rel="stylesheet" /></head><body onload="window.print()">');
+                  popupWin.document.write(toPrint.innerHTML);
+                  popupWin.document.write('</html>');
+                  popupWin.document.close();
+              };
 
-			      // source can be HTML-formatted string, or a reference
-			      // to an actual DOM element from which the text will be scraped.
-			      var source = $('#question')[0];
+              scope.printPDF = function (IsPrint) {
+                  if ($('#logo-set').length > 0) {
+                      $(this).css('marginRight', '50%');
+                  }
+                  if ($('#question table').length > 0) {
+                      $('#question table>thead').append('<tr>' + $('#question table>tbody>tr').first().html() + '</tr>');
+                  }
+                  if ($('#l-center').length > 0) {
+                      $('#l-center').css('float', 'right');
+                  }
+                  var pdf = new jsPDF('p', 'pt', 'letter');
+                  var source = $('#question')[0];
+                  var i = 0;
+                  var ar = [];
+                  $('#question img').each(function (e) {
+                      if (i == 0) {
+                          ar.push($(this).parent().next().css('marginTop'));
+                          $(this).parent().next().css('marginTop', $(this).height() + 75);
+                      } else {
+                          ar.push($(this).parent().next().css('marginTop'));
+                          $(this).parent().next().css('marginTop', $(this).height() + 45);
+                      }
+                      i++;
+                  })
+                  var pdf = new jsPDF('p', 'pt', 'letter');
 
-			      // we support special element handlers. Register them with jQuery-style
-			      // ID selector for either ID or node name. ("#iAmID", "div", "span" etc.)
-			      // There is no support for any other type of selectors
-			      // (class, of compound) at this time.
-			      var specialElementHandlers = {
-			          // element with id of "bypass" - jQuery style selector
-			          '#bypassme': function (element, renderer) {
-			              // true = "handled elsewhere, bypass text extraction"
-			              return true
-			          }
-			      };
+                  // source can be HTML-formatted string, or a reference
+                  // to an actual DOM element from which the text will be scraped.
+                  var source = $('#question')[0];
 
-			      var margins = {
-			          top: 35,
-			          bottom: 30,
-			          left: 40,
-			          width: 522
-			      };
-			      // all coords and widths are in jsPDF instance's declared units
-			      // 'inches' in this case
-			      pdf.fromHTML(
+                  // we support special element handlers. Register them with jQuery-style
+                  // ID selector for either ID or node name. ("#iAmID", "div", "span" etc.)
+                  // There is no support for any other type of selectors
+                  // (class, of compound) at this time.
+                  var specialElementHandlers = {
+                      // element with id of "bypass" - jQuery style selector
+                      '#bypassme': function (element, renderer) {
+                          // true = "handled elsewhere, bypass text extraction"
+                          return true
+                      }
+                  };
+
+                  var margins = {
+                      top: 35,
+                      bottom: 30,
+                      left: 40,
+                      width: 522
+                  };
+                  // all coords and widths are in jsPDF instance's declared units
+                  // 'inches' in this case
+                  pdf.fromHTML(
                                source // HTML string or DOM elem ref.
                                , margins.left // x coord
                                , margins.top // y coord
@@ -397,38 +496,38 @@ angular.module('wysiwyg.module', []) // 'colorpicker.module'
                                }, margins);
 
 
-			      /////////////////
-			      //debugger;
-			      //var toPrint = document.getElementById('question');
-			      //var elHtml = toPrint.innerHTML;
-			      //var link = document.createElement('a');
-			      //var mimeType = 'text/html';
-			      //$http({
-			      //    method: 'GET',
-			      //    url: httpServiceUrlForService + "api/CommunicationForm/getPdfConvertDoc?InnerHTML=" + elHtml,
-			      //    //transformRequest: function (data) {
-			      //    //    var formData = new FormData();
-			      //    //    if (IsBlank(data.model)) {
-			      //    //        alert("Empty file");
-			      //    //        return;
-			      //    //    }
-			      //    //    formData.append("model", angular.toJson(data.model));
-			      //    //    return formData;
-			      //    //},
-			      //    //data: { model: $scope.model }
-			      //}).success(function (data, status, headers, config) {
-			      //    alert(JSON.stringify(data));
-			      //});
+                  /////////////////
+                  //debugger;
+                  //var toPrint = document.getElementById('question');
+                  //var elHtml = toPrint.innerHTML;
+                  //var link = document.createElement('a');
+                  //var mimeType = 'text/html';
+                  //$http({
+                  //    method: 'GET',
+                  //    url: httpServiceUrlForService + "api/CommunicationForm/getPdfConvertDoc?InnerHTML=" + elHtml,
+                  //    //transformRequest: function (data) {
+                  //    //    var formData = new FormData();
+                  //    //    if (IsBlank(data.model)) {
+                  //    //        alert("Empty file");
+                  //    //        return;
+                  //    //    }
+                  //    //    formData.append("model", angular.toJson(data.model));
+                  //    //    return formData;
+                  //    //},
+                  //    //data: { model: $scope.model }
+                  //}).success(function (data, status, headers, config) {
+                  //    alert(JSON.stringify(data));
+                  //});
 
-			      ////window.open("http://localhost:63036/App_Data/HTMLFiles/temp.html");
+                  ////window.open("http://localhost:63036/App_Data/HTMLFiles/temp.html");
 
 
-			      ////link.setAttribute('download', "test.html");
-			      ////link.setAttribute('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(elHtml));
+                  ////link.setAttribute('download', "test.html");
+                  ////link.setAttribute('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(elHtml));
 
-			      ////link.click(); 
-			  };
+                  ////link.click(); 
+              };
 
-		  }
-	  };
+          }
+      };
   });
