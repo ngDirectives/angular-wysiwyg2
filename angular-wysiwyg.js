@@ -472,7 +472,11 @@ angular.module('wysiwyg.module',[])
                                    if (IsPrint) {
                                        pdf.autoPrint();  // <<--------------------- !!
                                    }
-                                   pdf.output('dataurlnewwindow');
+                                   //pdf.output('dataurlnewwindow');
+
+                                   var blob = pdf.output("blob");
+                                   window.open(URL.createObjectURL(blob));
+
                                    setTimeout(function () {
                                        if ($('#logo-set').length > 0) {
                                            $(this).css('marginRight', '30%');
