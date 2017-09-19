@@ -69,12 +69,12 @@ angular.module('wysiwyg.module',[])
 						  '<button ng-show="isLink" tabindex="-1" title="Unlink" type="button" unselectable="on" class="btn btn-default" ng-click="format(\'unlink\')"><i class="fa fa-unlink"></i> </button>' +
 						  '<button title="Image" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="insertImage()"><i class="fa fa-picture-o"></i> </button>' +
 					  '</div>' +
-					  '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin">' +
+					  '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin hide-emr">' +
 						  '<button title="Print Preview" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="printPreview()"><i class="fa fa-search"></i> </button>' +
 						  '<button title="Print" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="printPDF(true)"><i class="fa fa-print"></i> </button>' +
 					  '</div>' +
                        '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin">' +
-						  '<button title="PDF" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="printPDF(false)"><i class="fa fa-file-text-o"></i> </button>' +
+						  '<button title="PDF" tabindex="-1" type="button" unselectable="on" class="btn btn-default hide-emr" ng-click="printPDF(false)"><i class="fa fa-file-text-o"></i> </button>' +
 						  '<button title="Voice" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="texttospeach($event)"  ng-class=\'{ "mic-active": $root.recognizing }\'><i class="fa" ng-class=\'$root.recognizing ? "fa-microphone-slash" : "fa-microphone"\'></i> </button>' +
 					  '</div>' +
 					  '<div id="{{textareaId}}" style="resize:vertical;height:{{textareaHeight || \'80px\'}}; font-family:{{\'Times New Roman\'}}; font-size:{{\'17px\'}}; overflow:auto" contentEditable="true" class="{{textareaClass}} wysiwyg-textarea" rows="{{textareaRows}}" name="{{textareaName}}" required="{{textareaRequired}}" placeholder="{{textareaPlaceholder}}" ng-model="value"></div>' +
