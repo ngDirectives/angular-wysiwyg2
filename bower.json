@@ -1,11 +1,11 @@
 {
   "name": "angular-wysiwyg2",
-   "version": "2017.0.1",
+   "version": "2017.0.2",
   "homepage": "https://github.com/ngDirectives/angular-wysiwyg2",
   "authors": [
     "nil4you <nil4u.you@gmail.com>"
   ],
-  "version":"2017.1",
+  "version":"2017.0.2",
   "description": "wysiwyg with added feature of print and print preview",
   "main": "angular-wysiwyg.js",
   "keywords": [
