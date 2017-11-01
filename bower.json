@@ -5,7 +5,7 @@
   "authors": [
     "nil4you <nil4u.you@gmail.com>"
   ],
-  "version":"1.1",
+  "version":"1.1.0",
   "description": "wysiwyg with added feature of print and print preview",
   "main": "angular-wysiwyg.js",
   "keywords": [
