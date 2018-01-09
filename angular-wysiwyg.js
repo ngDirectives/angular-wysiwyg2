@@ -25,7 +25,7 @@ angular.module('wysiwyg.module',[])
 					  '	.wysiwyg-select{ height:30px;margin-bottom:1px;}' +
 					  '	.wysiwyg-colorpicker{ font-family: arial, sans-serif !important;font-size:17px !important; padding:2px 10px !important;}' +
 					  '</style>' +
-					  '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin">' +
+					  '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin" ng-if="showHide[0]!=0">' +
 						  '<button title="Bold" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="format(\'bold\')" ng-class="{ active: isBold}"><i class="fa fa-bold"></i></button>' +
 						  '<button title="Italic" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="format(\'italic\')" ng-class="{ active: isItalic}"><i class="fa fa-italic"></i></button>' +
 						  '<button title="Underline" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="format(\'underline\')" ng-class="{ active: isUnderlined}"><i class="fa fa-underline"></i></button>' +
@@ -33,11 +33,11 @@ angular.module('wysiwyg.module',[])
 						  '<button title="Subscript" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="format(\'subscript\')" ng-class="{ active: isSubscript}"><i class="fa fa-subscript"></i></button>' +
 						  '<button title="Superscript" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="format(\'superscript\')" ng-class="{ active: isSuperscript}"><i class="fa fa-superscript"></i></button>' +
 					  '</div>' +
-					  '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin">' +
+					  '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin" ng-if="showHide[1]!=0">' +
 						  '<select tabindex="-1"  unselectable="on" class="form-control wysiwyg-select" ng-model="font" ng-options="f for f in fonts" ng-change="setFont()">' +
 						  '</select>' +
 					  '</div>' +
-					  '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin">' +
+					  '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin" ng-if="showHide[2]!=0">' +
 						  '<select unselectable="on" tabindex="-1" class="form-control wysiwyg-select" ng-model="fontSize" ng-options="f.size for f in fontSizes" ng-change="setFontSize()">' +
 						  '</select>' +
 					  '</div>' +
@@ -45,35 +45,35 @@ angular.module('wysiwyg.module',[])
 					  //	'<button title="Font Color" tabindex="-1" colorpicker="rgba" type="button" colorpicker-position="top" class="btn btn-default ng-valid ng-dirty wysiwyg-colorpicker wysiwyg-fontcolor" ng-model="fontColor" ng-change="setFontColor()">A</button>'+	
 					  //	'<button title="Hilite Color" tabindex="-1" colorpicker="rgba" type="button" colorpicker-position="top" class="btn btn-default ng-valid ng-dirty wysiwyg-colorpicker wysiwyg-hiliteColor" ng-model="hiliteColor" ng-change="setHiliteColor()">H</button>'+	
 					  //'</div>' +
-					  '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin">' +
+					  '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin" ng-if="showHide[3]!=0">' +
 						  '<button title="Remove Formatting" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="format(\'removeFormat\')" ><i class="fa fa-eraser"></i></button>' +
 					  '</div>' +
-					  '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin">' +
+					  '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin" ng-if="showHide[4]!=0">' +
 						  '<button title="Ordered List" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="format(\'insertorderedlist\')" ng-class="{ active: isOrderedList}"><i class="fa fa-list-ol"></i></button>' +
 						  '<button title="Unordered List" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="format(\'insertunorderedlist\')" ng-class="{ active: isUnorderedList}"><i class="fa fa-list-ul"></i></button>' +
 						  //'<button title="Outdent" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="format(\'outdent\')"><i class="fa fa-outdent"></i></button>' +
 						  //'<button title="Indent" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="format(\'indent\')"><i class="fa fa-indent"></i></button>' +
 					  '</div>' +
-					  '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin">' +
+					  '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin" ng-if="showHide[5]!=0">' +
 						  '<button title="Left Justify" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="format(\'justifyleft\')" ng-class="{ active: isLeftJustified}"><i class="fa fa-align-left"></i></button>' +
 						  '<button title="Center Justify" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="format(\'justifycenter\')" ng-class="{ active: isCenterJustified}"><i class="fa fa-align-center"></i></button>' +
 						  '<button title="Right Justify" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="format(\'justifyright\')" ng-class="{ active: isRightJustified}"><i class="fa fa-align-right"></i></button>' +
 					  '</div>' +
-					  '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin">' +
+					  '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin" ng-if="showHide[6]!=0">' +
 						  '<button title="Code" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="format(\'formatblock\', \'pre\')"  ng-class="{ active: isPre}"><i class="fa fa-code"></i></button>' +
 						  '<button title="Quote" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="format(\'formatblock\', \'blockquote\')"  ng-class="{ active: isBlockquote}"><i class="fa fa-quote-right"></i></button>' +
 						  '<button title="Paragragh" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="format(\'insertParagraph\')"  ng-class="{ active: isParagraph}">P</button>' +
 					  '</div>' +
-					  '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin">' +
+					  '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin" ng-if="showHide[7]!=0">' +
 						  '<button ng-show="!isLink" tabindex="-1" title="Link" type="button" unselectable="on" class="btn btn-default" ng-click="createLink()"><i class="fa fa-link" ></i> </button>' +
 						  '<button ng-show="isLink" tabindex="-1" title="Unlink" type="button" unselectable="on" class="btn btn-default" ng-click="format(\'unlink\')"><i class="fa fa-unlink"></i> </button>' +
 						  '<button title="Image" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="insertImage()"><i class="fa fa-picture-o"></i> </button>' +
 					  '</div>' +
-					  '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin hide-emr">' +
+					  '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin hide-emr" ng-if="showHide[8]!=0">' +
 						  '<button title="Print Preview" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="printPreview()"><i class="fa fa-search"></i> </button>' +
 						  '<button title="Print" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="printPDF(true)"><i class="fa fa-print"></i> </button>' +
 					  '</div>' +
-                       '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin">' +
+                       '<div class="btn-group btn-group-sm wysiwyg-btn-group-margin" ng-if="showHide[9]!=0">' +
 						  '<button title="PDF" tabindex="-1" type="button" unselectable="on" class="btn btn-default hide-emr" ng-click="printPDF(false)"><i class="fa fa-file-text-o"></i> </button>' +
 						  '<button title="Voice" tabindex="-1" type="button" unselectable="on" class="btn btn-default" ng-click="texttospeach($event)"  ng-class=\'{ "mic-active": $root.recognizing }\'><i class="fa" ng-class=\'$root.recognizing ? "fa-microphone-slash" : "fa-microphone"\'></i> </button>' +
 					  '</div>' +
@@ -89,13 +89,17 @@ angular.module('wysiwyg.module',[])
               textareaClass: '@textareaClass',
               textareaRequired: '@textareaRequired',
               textareaId: '@textareaId',
+			  showHide: '=showButton'
           },
           replace: true,
           require: 'ngModel',
           link: function (scope, element, attrs, ngModelController) {
 
               var textarea = element.find('div.wysiwyg-textarea');
-
+			//console.log(scope.showHide);
+			// if(angular.isUndefined(showHide)){
+				// scope.isundefined
+			// }
               scope.fonts = [
 				  'Georgia',
 				  'Palatino Linotype',
