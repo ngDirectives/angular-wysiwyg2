@@ -503,7 +503,6 @@ angular.module('wysiwyg.module',[])
                                    }, 400);
                                }, margins);
 
-
                   /////////////////
                   //debugger;
                   //var toPrint = document.getElementById('question');
